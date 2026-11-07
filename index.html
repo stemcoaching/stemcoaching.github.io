@@ -767,7 +767,7 @@ async function buy(k){
  };
  $('pn').onclick=()=>payStart(k,s,()=>used);
 }
-const API='https://asia-south1-stem-coaching.cloudfunctions.net/stemApi';
+const API='https://stem-api-947770205223.asia-south1.run.app';
 async function api(action,data){
  const t=await me.getIdToken();
  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:JSON.stringify({action,...data})});
