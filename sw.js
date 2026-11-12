@@ -18,6 +18,11 @@ self.addEventListener('fetch',function(e){
    });
    if(hit){e.waitUntil(net.catch(function(){}));return hit}
    return net.catch(function(){return cache.match('/')});
+     const FILES = [
+  '/', '/index.html', '/style.css', '/boot.js',
+  '/assets.js', '/app.js', '/ui.js', '/search.js',
+  '/logo.webp'
+];
   });
  }));
 });
