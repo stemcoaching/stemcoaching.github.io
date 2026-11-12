@@ -377,7 +377,7 @@ async function quizView(){
  const y=isoD(new Date(Date.now()-864e5)),c0=(sk.last===td||sk.last===y)?(sk.count||0):0;
  const hd=`<div class="card shero"><b>🔥 Streak: ${c0} day${c0==1?'':'s'}</b><br>Best: ${sk.best||0}</div>`;
  if(!qd||!qd.qs||!qd.qs.length){app.innerHTML=sNav('q')+hd+'<div class="card">Today\'s quiz is not added yet. Please check later.</div>';return}
- if(sk.last===td){app.innerHTML=sNav('q')+hd+'<div class="card"><b class="ok">Today\'s quiz is done.</b><br>Your score: '+(sk.lastScore??'')+' / '+qd.qs.length+'<br><small>Come back tomorrow to keep your streak.</small><button class="s" onclick="pdfQuiz(\''+td+'\',this,1)">Download today\'s quiz (PDF with answers)</button></div>';return}
+ if(sk.last===td){app.innerHTML=sNav('q')+hd+'<div class="card"><b class="ok">Today\'s quiz is done.</b><br>Your score: '+(sk.lastScore??'')+' / '+qd.qs.length+'<br><small>Come back tomorrow to keep your streak.</small></div>';return}
  QZ={qd,sk,td,y,a:[],n:0,ok:0};
  app.innerHTML=sNav('q')+hd+(qd.qs.some(q=>q.qh)?lgBtn({qh:1}):'')+'<small>Tap an option to see if it is right. Answer every question to keep your streak.</small>'+qd.qs.map((q,i)=>`<div class="card" id="zq${i}"><b>${i+1}.</b> <span class="qt">${rich(qL(q))}</span>`+oL(q).map((o,j)=>`<button class="s zo" onclick="zAns(${i},${j})">${rich(o)}</button>`).join('')+'</div>').join('')+'<div id="zres"></div>';
 }
@@ -400,6 +400,7 @@ async function quizEdit(d){const m=$('zm');m.className='';
 async function quizDel(d){if(!confirm('Delete the quiz of '+dmy(d)+'?'))return;try{await db.collection('dailyquiz').doc(d).delete();quizList()}catch(e){alert(e.message)}}
 async function quizSave(){const m=$('zm'),r=parseQ($('zt').value);if(r.err){m.className='bad';return m.textContent=r.err}if(!r.qs.length||r.qs.some(q=>q.t==='num')){m.className='bad';return m.textContent='Add multiple-choice questions only.'}if(!$('zd').value){m.className='bad';return m.textContent='Choose a date.'}try{await db.collection('dailyquiz').doc($('zd').value).set({qs:r.qs,ans:r.ans});m.className='ok';m.textContent='Saved '+r.qs.length+' questions for '+dmy($('zd').value)+'.';quizList()}catch(e){m.className='bad';m.textContent=e.message}}
 async function pdfQuiz(d,btn,withKey){
+ if(!(me&&(me.email===TEACHER||STAFF)))return;
  if(!window.jspdf){pdfLoad().then(function(){alert('PDF tool is ready. Please tap the button again.')},function(){alert('PDF tool could not load. Check your internet and try again.')});return}
  const old=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='Preparing PDF…'}
  try{
@@ -1274,6 +1275,7 @@ function pbPages(doc,ttl,sub,qp,bil,from){
  }
 }
 async function pdfPaper(id,btn){
+ if(!(me&&(me.email===TEACHER||STAFF)))return;
  if(!window.jspdf){pdfLoad().then(function(){alert('PDF tool is ready. Please tap the button again.')},function(){alert('PDF tool could not load. Check your internet and try again.')});return}
  const old=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='Preparing PDF…'}
  try{
@@ -1419,11 +1421,28 @@ function serAdd(id){const v=$('sps'+id).value;if(v&&!SP[id].includes(v))SP[id].p
 function serDel(id,k){SP[id]=SP[id].filter(z=>z!==k);serFill(id);serChips(id)}
 async function editP(uid){
  const sx=(await db.collection('students').doc(uid).get()).data()||{},cur=sx.plans||[];
- $('pe'+uid).innerHTML=`<label class="opt"><input type="checkbox" id="nt${uid}" ${sx.notests?'checked':''}>No tests (profile and attendance only)</label>`+serPickerHtml(uid,cur)+`<button onclick="saveP('${uid}')">Save</button>`;serFill(uid);serChips(uid);
+ $('pe'+uid).innerHTML=`<label class="opt"><input type="checkbox" id="nt${uid}" ${sx.notests?'checked':''}>No tests (profile and attendance only)</label>`+serPickerHtml(uid,cur)+`<button onclick="saveP('${uid}')">Save</button>`+((sx.removedPlans||[]).filter(k=>!cur.includes(k)).length?'<div class="card"><b>Removed earlier (tap to give access back)</b><br>'+(sx.removedPlans||[]).filter(k=>!cur.includes(k)).map(k=>`<button class="s" onclick="restoreP('${uid}','${esc(k)}')">Restore: ${esc(PN[k]||k)}</button>`).join('')+'</div>':'');serFill(uid);serChips(uid);
 }
 async function saveP(uid){
  const nt=$('nt'+uid).checked,pl=nt?[]:[...(SP[uid]||[])];
- try{await db.collection('students').doc(uid).update({plans:pl,notests:nt});listStudents()}catch(e){alert(e.message)}
+ try{
+  let old=[],rm=[];try{const sd=(await db.collection('students').doc(uid).get()).data()||{};old=sd.plans||[];rm=sd.removedPlans||[]}catch(e){}
+  const rem=[...new Set(rm.filter(k=>!pl.includes(k)).concat(old.filter(k=>!pl.includes(k))))];
+  try{await db.collection('students').doc(uid).update({plans:pl,notests:nt,removedPlans:rem})}
+  catch(e1){await db.collection('students').doc(uid).update({plans:pl,notests:nt})}
+  listStudents()}catch(e){alert(e.message)}
+}
+async function restoreP(uid,k){
+ try{
+  const F=firebase.firestore.FieldValue;
+  try{await db.collection('students').doc(uid).update({plans:F.arrayUnion(k),notests:false,removedPlans:F.arrayRemove(k)})}
+  catch(e1){await db.collection('students').doc(uid).update({plans:F.arrayUnion(k),notests:false})}
+  listStudents()}catch(e){alert(e.message)}
+}
+function enrollCsv(){
+ const rows=[['Student','Roll','Class','Mobile','Test series']];
+ LSL.forEach(id=>{const d=LSD.find(z=>z.id===id);if(!d)return;const x=d.data();rows.push([x.name||'',x.roll||'',x.cls||'',x.mobile||'',x.notests?'None':(x.plans||[]).map(k=>PN[k]||k).join(' | ')])});
+ dl('STEM_enrollment_'+isoToday()+'.csv',toCsv(rows),'text/csv');
 }
 let LSF='',LSS='';
 let LSQ='',LSX='',LSO=false,LSD=[];
@@ -1459,7 +1478,7 @@ function lsRender(){
   return true}).sort((a,b)=>String(a.data().cls||'').localeCompare(String(b.data().cls||''),undefined,{numeric:true})||String(a.data().name||'').localeCompare(String(b.data().name||'')));
  LSL=docs.map(d=>d.id);
  const n=(LSF?1:0)+(LSS?1:0)+(LSX?1:0),bn=$('lsn');if(bn)bn.textContent=n?' ('+n+')':'';
- el.innerHTML='<h3>Students ('+docs.length+' of '+LSD.length+')</h3><button class="s" onclick="idSheet(this)">ID cards of this list (A4 print sheet)</button>'+docs.map(d=>{const x=d.data();return `<div class="card">${esc(x.name)} (${esc(x.roll)})${LSD.filter(z=>z.data().roll===x.roll).length>1?' <span class="bad">same number as another student</span>':''}, Class ${esc(x.cls||'-')}${x.mobile?'<br><small>Mobile: '+esc(x.mobile)+'</small>':''}${x.cls==='Dropper'?'<br><small><b>Dropper - attendance '+(regular(x)?'on':'off')+'</b></small>':regular(x)?'':'<br><small><b>Test series only - no attendance</b></small>'}<br><small>Tests: ${x.notests?'None (profile and attendance only)':(x.plans||[]).map(k=>PN[k]).join(', ')||'Custom tests only'}</small><div class="btns"><button class="s" onclick="editD('${d.id}')">Details and photo</button><button class="s" onclick="editP('${d.id}')">Change tests</button><button class="s" onclick="idPdf(['${d.id}'],this)">ID card</button></div>${me.email===TEACHER?`<button class="s" onclick="delS('${d.id}')">Delete student</button>`:''}<div id="pd${d.id}"></div><div id="pe${d.id}"></div></div>`}).join('')+(docs.length?'':'<p>No students match this search or filter.</p>');
+ el.innerHTML='<h3>Students ('+docs.length+' of '+LSD.length+')</h3><button class="s" onclick="idSheet(this)">ID cards of this list (A4 print sheet)</button><button class="s" onclick="enrollCsv()">Download this list with test series (CSV)</button>'+docs.map(d=>{const x=d.data();return `<div class="card">${esc(x.name)} (${esc(x.roll)})${LSD.filter(z=>z.data().roll===x.roll).length>1?' <span class="bad">same number as another student</span>':''}, Class ${esc(x.cls||'-')}${x.mobile?'<br><small>Mobile: '+esc(x.mobile)+'</small>':''}${x.cls==='Dropper'?'<br><small><b>Dropper - attendance '+(regular(x)?'on':'off')+'</b></small>':regular(x)?'':'<br><small><b>Test series only - no attendance</b></small>'}<br><small>Tests: ${x.notests?'None (profile and attendance only)':(x.plans||[]).map(k=>PN[k]).join(', ')||'Custom tests only'}</small><div class="btns"><button class="s" onclick="editD('${d.id}')">Details and photo</button><button class="s" onclick="editP('${d.id}')">Change tests</button><button class="s" onclick="idPdf(['${d.id}'],this)">ID card</button></div>${me.email===TEACHER?`<button class="s" onclick="delS('${d.id}')">Delete student</button>`:''}<div id="pd${d.id}"></div><div id="pe${d.id}"></div></div>`}).join('')+(docs.length?'':'<p>No students match this search or filter.</p>');
 }
 async function delS(uid){
  if(me.email!==TEACHER)return alert('Only the teacher can delete a student.');
