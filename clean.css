@@ -1,7 +1,7 @@
 /* clean.css: flat dark-blue and white look. Loaded AFTER style.css, so style.css is untouched.
    To go back to the old look, remove the clean.css line from index.html.
    Test-taking screens (#app.nt) are left exactly as they were. */
-:root{--navy:#0f2a5c;--navy2:#1a4585;--gold:#9db6e0;--a:#9db6e0;--h:#0f2a5c;--line:#dde4ef;--paper:#f4f6fa;--muted:#5d6b82;--ink:#16233b;--t:#16233b;--shadow:none;--serif:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+:root{--navy:#1f4e92;--navy2:#2f66b3;--gold:#9db6e0;--a:#9db6e0;--h:#0f2a5c;--line:#dde4ef;--paper:#f4f6fa;--muted:#5d6b82;--ink:#16233b;--t:#16233b;--shadow:none;--serif:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 html,body,body.nx{background:var(--paper)!important}
 body{font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif!important;color:var(--ink)}
 
@@ -38,7 +38,7 @@ body.nx #app .card,.phero,.ci{box-shadow:none!important}
 
 /* buttons: one solid navy style, secondary ones white with a border */
 #app:not(.nt) button{background-image:none!important;box-shadow:none!important;font-weight:600;min-height:42px}
-#app:not(.nt) button:not(.s):not(.okb):not(.badb):not([style*="background"]){background-color:var(--navy)}
+#app:not(.nt) button:not(.s):not(.okb):not(.badb):not(.at):not(.prw):not(.xt):not([style*="background"]){background-color:var(--navy)}
 #app:not(.nt) button.s:not(.okb):not(.badb):not([style*="background"]){background-color:#fff!important;color:var(--navy)!important;border:1px solid var(--line)!important}
 #app:not(.nt) button.s:not(.okb):not(.badb):hover{background-color:var(--paper)!important}
 input,select,textarea{border-radius:10px!important;box-shadow:none!important}
@@ -56,3 +56,13 @@ summary{box-shadow:none!important}
 #tb{background:#fff!important;border-bottom:1px solid var(--line)!important}
 #drw{box-shadow:0 0 0 1px var(--line)!important}
 #drw button{box-shadow:none!important;background-image:none!important}
+
+/* keep meaningful colours: attendance P/A/L/H buttons keep green, red, amber, indigo (from style.css) */
+#app .ar button.at{border-radius:10px!important}
+/* profile row stays white with dark text */
+#app button.prw{background:#fff!important;color:var(--navy)!important;border:1px solid var(--line)!important;border-radius:12px!important;box-shadow:none!important}
+#app button.prw b{color:var(--navy)!important}
+/* NEET / JEE tiles: flat, still different from each other */
+#app button.xt{border-radius:14px!important;box-shadow:none!important}
+#app .xt-n{background:#1f7a55!important}
+#app .xt-j{background:var(--navy)!important}
