@@ -45,6 +45,10 @@ input,select,textarea{border-radius:10px!important;box-shadow:none!important}
 input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(26,69,133,.15)!important;border-color:var(--navy2)!important}
 summary{box-shadow:none!important}
 
+/* FIX 1: every navy button must have white text (the Home pill had blue text on a blue button) */
+#app:not(.nt) button:not(.s):not(.okb):not(.badb):not(.at):not(.prw):not(.xt):not([style*="background"]):not(.tabs button):not(.rtabs button):not(.snav button):not(.exseg button){color:#fff!important}
+.phero button{background-color:var(--navy)!important;background-image:none!important;color:#fff!important;border:0!important;box-shadow:none!important;text-shadow:none!important;opacity:1!important}
+
 /* tab strips */
 .snav,.tabs{background:#fff!important;border:1px solid var(--line)!important;border-radius:12px!important}
 .tabs button.on,.exseg button.on{background:var(--navy)!important;box-shadow:none!important}
@@ -54,7 +58,10 @@ summary{box-shadow:none!important}
 #bar button.tl{min-height:42px!important;padding:8px 12px!important;border-radius:10px!important;font-size:.9rem!important;box-shadow:none!important;background:var(--navy)!important;background-image:none!important}
 #bar #bk{background:#fff!important;background-image:none!important;color:var(--navy)!important;border:1px solid var(--navy)!important;box-shadow:none!important;border-radius:10px!important}
 #tb{background:#fff!important;border-bottom:1px solid var(--line)!important}
-#drw{box-shadow:0 0 0 1px var(--line)!important}
+/* FIX 2: the thin light line at the left edge was the hidden side menu's 1px outline peeking onto the screen.
+   The outline now shows only while the menu is open. */
+#drw{box-shadow:none!important}
+#drw.open,#drw.on,#drw.show,#drw.sh,#drw.active{box-shadow:0 0 0 1px var(--line),6px 0 18px rgba(15,42,92,.18)!important}
 #drw button{box-shadow:none!important;background-image:none!important}
 
 /* keep meaningful colours: attendance P/A/L/H buttons keep green, red, amber, indigo (from style.css) */
